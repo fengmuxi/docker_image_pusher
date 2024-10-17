@@ -1,0 +1,151 @@
+name: Docker
+
+on:
+  issues:
+    types:
+      - opened
+
+# https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+permissions:
+  issues: write
+
+
+env:
+  ALIYUN_REGISTRY: "${{ secrets.ALIYUN_REGISTRY }}"
+  ALIYUN_NAME_SPACE: "${{ secrets.ALIYUN_NAME_SPACE }}"
+  ALIYUN_REGISTRY_USER: "${{ secrets.ALIYUN_REGISTRY_USER }}"
+  ALIYUN_REGISTRY_PASSWORD: "${{ secrets.ALIYUN_REGISTRY_PASSWORD }}"
+
+jobs:
+
+  build:
+    name: Pull
+    runs-on: ubuntu-latest
+    if: contains(github.event.issue.labels.*.name, 'sync image')
+    steps:
+    - name: Check Issue
+      id: get-image
+      env:
+        IMAGE: "${{ github.event.issue.title }}"
+      run: |
+        ORIGIN_IMAGE="${IMAGE}"
+        CORRECT_IMAGE="$(./hack/correct-image.sh "${ORIGIN_IMAGE}")"
+        if [[ "${CORRECT_IMAGE}" == "" ]]; then
+        gh issue comment ${{ github.event.issue.number }} -b "镜像 '${ORIGIN_IMAGE}' 不是一个镜像"
+        exit 1
+        fi
+        if [[ "${CORRECT_IMAGE}" != "${ORIGIN_IMAGE}" ]]; then
+        if ! ./hack/verify-allows.sh ./allows.txt "${CORRECT_IMAGE}"; then
+          gh issue comment ${{ github.event.issue.number }} -b "镜像 '${ORIGIN_IMAGE}' 不存在呢, 也许应该是 '${CORRECT_IMAGE}', 并且不在白名单列表里, 不支持同步和访问<br>可以将其添加到[白名单](https://github.com/${{ github.repository }}/issues/2328)"
+        else
+          gh issue comment ${{ github.event.issue.number }} -b "镜像 '${ORIGIN_IMAGE}' 不存在呢, 也许应该是 '${CORRECT_IMAGE}'"
+        fi
+        exit 1
+        fi
+        if ! ./hack/verify-allows.sh ./allows.txt "${ORIGIN_IMAGE}"; then
+        gh issue comment ${{ github.event.issue.number }} -b "镜像 ${ORIGIN_IMAGE} 不在白名单列表里, 不支持同步和访问<br>可以将其添加到[白名单](https://github.com/${{ github.repository }}/issues/2328)"
+        exit 1
+        fi
+        echo "image=${ORIGIN_IMAGE}" >> $GITHUB_OUTPUT
+
+    - name: Check Image
+      run: |
+        ORIGIN_IMAGE="${{ steps.get-image.outputs.image }}"
+        gh issue comment ${{ github.event.issue.number }} -b "镜像 ${ORIGIN_IMAGE} 同步中...<br>[详情请查看](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+
+    - name: Before freeing up disk space
+      run: |
+        echo "Before freeing up disk space"
+        echo "=============================================================================="
+        df -hT
+        echo "=============================================================================="
+
+    # 增加可用磁盘空间
+    - name: Maximize build space
+      uses: easimon/maximize-build-space@master
+      with:
+
+        root-reserve-mb: 2048
+        swap-size-mb: 128
+        remove-dotnet: 'true'
+        remove-haskell: 'true'
+        # 如果空间还是不够用，可以把以下开启，清理出更多空间
+        # remove-android: 'true'
+        # remove-codeql: 'true'
+        build-mount-path: '/var/lib/docker/'
+
+    - name: Restart docker
+      run: sudo service docker restart
+
+    - name: Free up disk space complete
+      run: |
+        echo "Free up disk space complete"
+        echo "=============================================================================="
+        df -hT
+        echo "=============================================================================="
+
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Docker Setup Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build and push image Aliyun
+      run: |
+        ORIGIN_IMAGE="${{ steps.get-image.outputs.image }}"
+        docker login -u $ALIYUN_REGISTRY_USER -p $ALIYUN_REGISTRY_PASSWORD $ALIYUN_REGISTRY
+        # 数据预处理,判断镜像是否重名
+        declare -A duplicate_images
+        declare -A temp_map
+        
+        # 获取镜像的完整名称，例如kasmweb/nginx:1.25.3（命名空间/镜像名:版本号）
+        image=$(echo "${ORIGIN_IMAGE}" | awk '{print $NF}')
+        # 将@sha256:等字符删除
+        image="${image%%@*}"
+        echo "image $image"
+        # 获取镜像名:版本号  例如nginx:1.25.3
+        image_name_tag=$(echo "$image" | awk -F'/' '{print $NF}')
+        echo "image_name_tag $image_name_tag"
+        # 获取命名空间 例如kasmweb,  这里有种特殊情况 docker.io/nginx，把docker.io当成命名空间，也OK
+        name_space=$(echo "$image" | awk -F'/' '{if (NF==3) print $2; else if (NF==2) print $1; else print ""}')
+        echo "name_space: $name_space"
+        # 这里不要是空值影响判断
+        name_space="${name_space}_"
+        # 获取镜像名例如nginx
+        image_name=$(echo "$image_name_tag" | awk -F':' '{print $1}')
+        echo "image_name: $image_name"
+        
+        # 如果镜像存在于数组中，则添加temp_map
+        if [[ -n "${temp_map[$image_name]}" ]]; then
+              # 如果temp_map已经存在镜像名，判断是不是同一命名空间
+              if [[ "${temp_map[$image_name]}" != $name_space  ]]; then
+                echo "duplicate image name: $image_name"
+                duplicate_images[$image_name]="true"
+              fi
+        else
+            # 存镜像的命名空间
+            temp_map[$image_name]=$name_space
+        fi       
+        
+        
+        echo "docker pull ${ORIGIN_IMAGE}"
+        docker pull ${ORIGIN_IMAGE}
+        # 将@sha256:等字符删除
+        new_image="$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/$platform_prefix$name_space_prefix$image_name_tag"
+        echo "docker tag $image $new_image"
+        docker tag $image $new_image
+        echo "docker push $new_image"
+        docker push $new_image
+        gh issue comment ${{ github.event.issue.number }} -b "镜像 ${ORIGIN_IMAGE} 同步完成<br>请使用 $new_image 替代源镜像"
+        gh issue edit ${{ github.event.issue.number }} --add-label "sync image succeeded" -b "IMAGE SYNC"
+        gh issue close ${{ github.event.issue.number }} --reason "completed"
+        echo "开始清理磁盘空间"
+        echo "=============================================================================="
+        df -hT
+        echo "=============================================================================="
+        docker rmi $image
+        docker rmi $new_image
+        echo "磁盘空间清理完毕"
+        echo "=============================================================================="
+        df -hT
+        echo "=============================================================================="
