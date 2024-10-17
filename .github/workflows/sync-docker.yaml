@@ -21,6 +21,9 @@ jobs:
   build:
     name: Pull
     runs-on: ubuntu-latest
+    if: contains(github.event.issue.labels.*.name, 'sync image')
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
