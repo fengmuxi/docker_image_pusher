@@ -139,9 +139,6 @@ jobs:
         docker tag $image $new_image
         echo "docker push $new_image"
         docker push $new_image
-        gh issue comment ${{ github.event.issue.number }} -b "镜像 ${ORIGIN_IMAGE} 同步完成<br>请使用 $new_image 替代源镜像"
-        gh issue edit ${{ github.event.issue.number }} --add-label "sync image succeeded" -b "IMAGE SYNC"
-        gh issue close ${{ github.event.issue.number }} --reason "completed"
         echo "开始清理磁盘空间"
         echo "=============================================================================="
         df -hT
@@ -152,3 +149,6 @@ jobs:
         echo "=============================================================================="
         df -hT
         echo "=============================================================================="
+        gh issue comment ${{ github.event.issue.number }} -b "镜像 ${ORIGIN_IMAGE} 同步完成<br>请使用 $new_image 替代源镜像"
+        gh issue edit ${{ github.event.issue.number }} --add-label "sync image succeeded" -b "IMAGE SYNC"
+        gh issue close ${{ github.event.issue.number }} --reason "completed"
