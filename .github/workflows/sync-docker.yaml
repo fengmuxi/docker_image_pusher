@@ -30,6 +30,8 @@ jobs:
         IMAGE: "${{ github.event.issue.title }}"
       run: |
         ORIGIN_IMAGE="${IMAGE}"
+        sudo chmod +x ./hack/correct-image.sh
+        sudo chmod +x ./hack/verify-allows.sh
         CORRECT_IMAGE="$(./hack/correct-image.sh "${ORIGIN_IMAGE}")"
         if [[ "${CORRECT_IMAGE}" == "" ]]; then
         gh issue comment ${{ github.event.issue.number }} -b "镜像 '${ORIGIN_IMAGE}' 不是一个镜像"
