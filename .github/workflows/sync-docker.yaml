@@ -1,4 +1,4 @@
-name: Docker
+name: Docker-sync
 
 on:
   issues:
@@ -21,7 +21,6 @@ jobs:
   build:
     name: Pull
     runs-on: ubuntu-latest
-    if: contains(github.event.issue.labels.*.name, 'sync image')
     steps:
     - name: Check Issue
       id: get-image
