@@ -114,6 +114,9 @@ jobs:
         echo "name_space: $name_space"
         # 这里不要是空值影响判断
         name_space="${name_space}_"
+        # 获取前缀 例如docker.io,  如docker.io/nginx，获取docker.io
+        name_prefix=$(echo "$image" | awk -F'/' '{print $1}')
+        echo "name_space: $name_space"
         # 获取镜像名例如nginx
         image_name=$(echo "$image_name_tag" | awk -F':' '{print $1}')
         echo "image_name: $image_name"
@@ -134,7 +137,7 @@ jobs:
         echo "docker pull ${ORIGIN_IMAGE}"
         docker pull ${ORIGIN_IMAGE}
         # 将@sha256:等字符删除
-        new_image="$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/${ORIGIN_IMAGE}"
+        new_image="$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/${name_prefix}_${name_space}_${image_name_tag}"
         echo "docker tag $image $new_image"
         docker tag $image $new_image
         echo "docker push $new_image"
