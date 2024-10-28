@@ -17,22 +17,18 @@ env:
   ALIYUN_REGISTRY_PASSWORD: "${{ secrets.ALIYUN_REGISTRY_PASSWORD }}"
 
 jobs:
-
   build:
     name: Pull
     runs-on: ubuntu-latest
-    if: contains(github.event.issue.labels.*.name, 'sync image')
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
     - name: Before freeing up disk space
       run: |
-        echo "Before freeing up disk space"
-        echo "=============================================================================="
-        df -hT
-        echo "=============================================================================="
+          echo "Before freeing up disk space"
+          echo "=============================================================================="
+          df -hT
+          echo "=============================================================================="
 
-    # 增加可用磁盘空间
+      # 增加可用磁盘空间
     - name: Maximize build space
       uses: easimon/maximize-build-space@master
       with:
@@ -50,10 +46,13 @@ jobs:
 
     - name: Free up disk space complete
       run: |
-        echo "Free up disk space complete"
-        echo "=============================================================================="
-        df -hT
-        echo "=============================================================================="
+          echo "Free up disk space complete"
+          echo "=============================================================================="
+          df -hT
+          echo "=============================================================================="
+
+    - name: Checkout Code
+      uses: actions/checkout@v4
 
     - name: Docker Setup Buildx
       uses: docker/setup-buildx-action@v3
