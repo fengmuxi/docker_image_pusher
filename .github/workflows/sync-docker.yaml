@@ -91,7 +91,6 @@ jobs:
 
     - name: Docker Setup Buildx
       uses: docker/setup-buildx-action@v3
-
     - name: Build and push image Aliyun
       run: |
         ORIGIN_IMAGE="${{ steps.get-image.outputs.image }}"
