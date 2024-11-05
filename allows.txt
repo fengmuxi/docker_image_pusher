@@ -609,7 +609,7 @@ docker.io/zlmediakit/zlmediakit
 docker.io/zmisgod/iptvchecker
 docker.io/openim/**
 docker.io/coturn/**
-docker.io/tailchat/**
+docker.io/moonrailgun/**
 docker.osgeo.org/**
 gcr.io/**
 ghcr.io/actions/**
