@@ -610,6 +610,7 @@ docker.io/zmisgod/iptvchecker
 docker.io/openim/**
 docker.io/coturn/**
 docker.io/moonrailgun/**
+docker.io/livekit/**
 docker.osgeo.org/**
 gcr.io/**
 ghcr.io/actions/**
