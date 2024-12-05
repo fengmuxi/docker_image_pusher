@@ -611,6 +611,7 @@ docker.io/openim/**
 docker.io/coturn/**
 docker.io/moonrailgun/**
 docker.io/livekit/**
+docker.io/keking/**
 docker.osgeo.org/**
 gcr.io/**
 ghcr.io/actions/**
