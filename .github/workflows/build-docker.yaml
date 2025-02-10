@@ -49,7 +49,7 @@ jobs:
         fi
         
         sudo chmod +x ./hack/supply-image.sh
-        CORRECT_IMAGE="$(./hack/correct-image.sh "${ORIGIN_IMAGE}")"
+        CORRECT_IMAGE="$(./hack/supply-image.sh "${ORIGIN_IMAGE}")"
         if [[ "${CORRECT_IMAGE}" == "" ]]; then
         gh issue comment ${{ github.event.issue.number }} -b "镜像 '${ORIGIN_IMAGE}' 名称不符合规范"
         exit 1
