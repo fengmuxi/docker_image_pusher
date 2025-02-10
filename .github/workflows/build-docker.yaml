@@ -35,13 +35,16 @@ jobs:
         ORIGIN_IMAGE="${IMAGE}"
         ISSUE_BODY="${{ github.event.issue.body }}"
         # 提取构建镜像密码
-        BUILD_PASSWORD=$(echo "$ISSUE_BODY" | awk -F '\n' '/构建镜像密码/ {getline; print $0}' | sed 's/^[[:space:]]*//')
+        BUILD_PASSWORD=$(echo "$ISSUE_BODY" | awk -F '\n' '/构建镜像密码/ {getline; print $1}' | sed 's/^[[:space:]]*//')
         echo "构建镜像密码: $BUILD_PASSWORD"
         sudo chmod +x ./hack/verify.sh
         PASSWORD="$(./hack/verify.sh "${BUILD_PASSWORD}")"
         if [[ "${PASSWORD}" == "" ]]; then
         gh issue comment ${{ github.event.issue.number }} -b "构建镜像 '${ORIGIN_IMAGE}' 密码错误，请联系管理员"
         exit 1
+        else
+        ISSUE_BODY = $(echo "$ISSUE_BODY" | awk -v password="$BUILD_PASSWORD" '{gsub(password, "******"); print}')
+        gh issue edit ${{ github.event.issue.number }} --body "$ISSUE_BODY"
         fi
         
         sudo chmod +x ./hack/supply-image.sh
