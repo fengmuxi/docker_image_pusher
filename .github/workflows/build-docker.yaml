@@ -38,7 +38,7 @@ jobs:
         BUILD_PASSWORD=$(echo "$ISSUE_BODY" | awk -F '\n' '/构建镜像密码/ {getline; getline; print $0}' | sed 's/^[[:space:]]*//')
         # echo "构建镜像密码: $BUILD_PASSWORD"
         # 提取构建镜像 DockerFile 内容
-        BUILD_DOCKERFILE=$(echo "$ISSUE_BODY" | awk -v RS= -F '\n' '/构建镜像DockerFile/ {print $0}' | sed -n '/### 构建镜像DockerFile/,$p' | sed '1d' | sed 's/^[[:space:]]*//')
+        BUILD_DOCKERFILE=$(echo "$ISSUE_BODY" | awk '/构建镜像DockerFile/ {flag=1; next} flag {print}' | sed 's/^[[:space:]]*//')
         echo "构建镜像 DockerFile 内容:"
         echo "$BUILD_DOCKERFILE"
         
