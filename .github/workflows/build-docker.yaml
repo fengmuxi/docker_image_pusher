@@ -37,6 +37,11 @@ jobs:
         # 提取构建镜像密码
         BUILD_PASSWORD=$(echo "$ISSUE_BODY" | awk -F '\n' '/构建镜像密码/ {getline; getline; print $0}' | sed 's/^[[:space:]]*//')
         # echo "构建镜像密码: $BUILD_PASSWORD"
+        # 提取构建镜像 DockerFile 内容
+        BUILD_DOCKERFILE=$(echo "$ISSUE_BODY" | awk -v RS= -F '\n' '/构建镜像DockerFile/ {print $0}' | sed 's/^[[:space:]]*//')
+        echo "构建镜像 DockerFile 内容:"
+        echo "$BUILD_DOCKERFILE"
+        
         sudo chmod +x ./hack/verify.sh
         PASSWORD="$(./hack/verify.sh "${BUILD_PASSWORD}")"
         if [[ "${PASSWORD}" == "" ]]; then
@@ -55,12 +60,7 @@ jobs:
         exit 1
         fi
         
-        # 提取构建镜像 DockerFile 内容
-        BUILD_DOCKERFILE=$(echo "$ISSUE_BODY" | awk -v RS= -F '\n' '/构建镜像DockerFile/ {print $0}' | sed -n '/^# 请提供构建镜像的DockerFile内容/,$p' | sed '1d' | sed 's/^[[:space:]]*//')
-        echo "构建镜像 DockerFile 内容:"
-        echo "$BUILD_DOCKERFILE"
         echo "$BUILD_DOCKERFILE" > /tmp/Dockerfile
-        
         echo "构建镜像 DockerFile 文件内容:"
         cat /tmp/Dockerfile
         echo "image=${ORIGIN_IMAGE}" >> $GITHUB_OUTPUT
