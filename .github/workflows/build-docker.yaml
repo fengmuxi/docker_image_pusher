@@ -112,7 +112,7 @@ jobs:
         declare -A temp_map
         
         # 获取镜像名:版本号  例如nginx:1.25.3
-        image_name_tag=$(echo "$image" | awk -F'/' '{print $NF}')
+        image_name_tag=$image
         echo "image_name_tag $image_name_tag"
         # 获取镜像名例如nginx
         image_name=$(echo "$image_name_tag" | awk -F':' '{print $1}')
