@@ -1,0 +1,30 @@
+name: Build Image
+description: 构建一个镜像
+labels:
+- build image
+body:
+- type: markdown
+  attributes:
+    value: |
+      # ↑↑↑↑↑↑↑↑↑↑↑ 填入你要构建的 Image名
+      ## 请包含 名称:标签 示例：gpt:v1 fast:latest
+
+- type: input
+  id: build_password
+  label: 构建镜像密码
+  description: 请提供构建镜像的密码
+  attributes:
+    value: |
+      # 请提供构建镜像的密码
+  validations:
+    required: true
+
+- type: textarea
+  id: build_dockerfile
+  label: 构建镜像DockerFile
+  description: 请提供构建镜像的DockerFile内容
+  attributes:
+    value: |
+      # 请提供构建镜像的DockerFile内容
+  validations:
+    required: true
