@@ -35,7 +35,7 @@ jobs:
         ORIGIN_IMAGE="${IMAGE}"
         ISSUE_BODY="${{ github.event.issue.body }}"
         # 提取构建镜像密码
-        BUILD_PASSWORD=$(echo "$ISSUE_BODY" | awk -F '\n' '/构建镜像密码/ {getline; print $1}' | sed 's/^[[:space:]]*//')
+        BUILD_PASSWORD=$(echo "$ISSUE_BODY" | awk -F '\n' '/构建镜像密码/ {getline; getline; print $0}' | sed 's/^[[:space:]]*//')
         echo "构建镜像密码: $BUILD_PASSWORD"
         sudo chmod +x ./hack/verify.sh
         PASSWORD="$(./hack/verify.sh "${BUILD_PASSWORD}")"
