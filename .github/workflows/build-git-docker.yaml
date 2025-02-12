@@ -37,8 +37,8 @@ jobs:
         # 提取构建镜像密码
         BUILD_PASSWORD=$(echo "$ISSUE_BODY" | awk -F '\n' '/构建镜像密码/ {getline; getline; print $0}' | sed 's/^[[:space:]]*//')
         # echo "构建镜像密码: $BUILD_PASSWORD"
-        # 提取构建镜像 DockerFile 内容
-        BUILD_GITURL=$(echo "$ISSUE_BODY" | awk '/构建镜像Git链接/ {flag=1; next} flag {print}' | sed 's/^[[:space:]]*//')
+        # 提取构建镜像 GitUrl 内容
+        BUILD_GITURL=$(echo "$ISSUE_BODY" | awk '/构建镜像Git链接/ {flag=1; next} flag {print}' | sed '1d' | sed 's/^[[:space:]]*//')
         echo "构建镜像 GitUrl 内容:"
         echo "$BUILD_GITURL"
         
