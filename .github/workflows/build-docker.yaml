@@ -150,7 +150,7 @@ jobs:
         gh issue edit ${{ github.event.issue.number }} --add-label "build image succeeded" -b "IMAGE BUILD"
         gh issue close ${{ github.event.issue.number }} --reason "completed"
 
-    - name: Fail Sync
+    - name: Fail Build
       if: failure()
       run: |
         ORIGIN_IMAGE="${{ steps.get-image.outputs.image }}"
