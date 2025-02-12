@@ -147,8 +147,10 @@ jobs:
             temp_map[$image_name]="fengmuxi"
         fi       
         
-        echo "docker build -t ${ORIGIN_IMAGE} -f ${DOCKER_PATH}/Dockerfile ."
-        docker build -t ${ORIGIN_IMAGE} -f ${DOCKER_PATH}/Dockerfile .
+        cd $DOCKER_PATH
+        echo "docker build -t ${ORIGIN_IMAGE} ."
+        docker build -t ${ORIGIN_IMAGE} .
+        cd /
         # 将@sha256:等字符删除
         new_image="$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/${image_name_tag}"
         echo "docker tag $ORIGIN_IMAGE $new_image"
