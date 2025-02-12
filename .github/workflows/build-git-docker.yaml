@@ -147,30 +147,28 @@ jobs:
             temp_map[$image_name]="fengmuxi"
         fi       
         
-        cd $DOCKER_PATH
-        echo "docker build -t ${ORIGIN_IMAGE} ."
-        docker build -t ${ORIGIN_IMAGE} .
+        echo "docker build -t ${ORIGIN_IMAGE} -f ${DOCKER_PATH}/Dockerfile ."
+        docker build -t ${ORIGIN_IMAGE} -f ${DOCKER_PATH}/Dockerfile .
         # 将@sha256:等字符删除
         new_image="$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/${image_name_tag}"
         echo "docker tag $ORIGIN_IMAGE $new_image"
         docker tag $ORIGIN_IMAGE $new_image
         echo "docker push $new_image"
         docker push $new_image
-        gh issue comment ${{ github.event.issue.number }} -b "镜像 ${ORIGIN_IMAGE} 构建完成<br>请使用 $new_image 替代源镜像"
-        gh issue edit ${{ github.event.issue.number }} --add-label "build image succeeded" -b "IMAGE BUILD"
-        gh issue close ${{ github.event.issue.number }} --reason "completed"
         echo "开始清理磁盘空间"
         echo "=============================================================================="
         df -hT
         echo "=============================================================================="
         docker rmi $ORIGIN_IMAGE
         docker rmi $new_image
-        cd /app
         rm -rf $DOCKER_PATH
         echo "磁盘空间清理完毕"
         echo "=============================================================================="
         df -hT
         echo "=============================================================================="
+        gh issue comment ${{ github.event.issue.number }} -b "镜像 ${ORIGIN_IMAGE} 构建完成<br>请使用 $new_image 替代源镜像"
+        gh issue edit ${{ github.event.issue.number }} --add-label "build image succeeded" -b "IMAGE BUILD"
+        gh issue close ${{ github.event.issue.number }} --reason "completed"
 
     - name: Fail Sync
       if: failure()
