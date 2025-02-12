@@ -1,0 +1,26 @@
+name: Build Git Image
+description: 构建一个Git仓库镜像
+labels:
+- build git image
+body:
+- type: markdown
+  attributes:
+    value: |
+      # ↑↑↑↑↑↑↑↑↑↑↑ 填入你要构建的 Image名
+      ## 请包含 名称:标签 示例：gpt:v1 fast:latest
+
+- type: input
+  attributes:
+    label: 构建镜像密码
+    placeholder: |
+      # 请提供构建镜像的密码
+  validations:
+    required: true
+
+- type: input
+  attributes:
+    label: 构建镜像Git链接
+    placeholder: |
+      # 请提供构建镜像Git链接
+  validations:
+    required: true
