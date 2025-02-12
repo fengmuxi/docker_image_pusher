@@ -38,7 +38,7 @@ jobs:
         BUILD_PASSWORD=$(echo "$ISSUE_BODY" | awk -F '\n' '/构建镜像密码/ {getline; getline; print $0}' | sed 's/^[[:space:]]*//')
         # echo "构建镜像密码: $BUILD_PASSWORD"
         # 提取构建镜像 DockerFile 内容
-        BUILD_GITURL=$(echo "$ISSUE_BODY" | awk '/构建镜像DockerFile/ {flag=1; next} flag {print}' | sed 's/^[[:space:]]*//')
+        BUILD_GITURL=$(echo "$ISSUE_BODY" | awk '/构建镜像Git链接/ {flag=1; next} flag {print}' | sed 's/^[[:space:]]*//')
         echo "构建镜像 GitUrl 内容:"
         echo "$BUILD_GITURL"
         
@@ -61,6 +61,17 @@ jobs:
         fi
         
         cd /tmp
+        # 尝试执行 git ls-remote 命令
+        git ls-remote "$BUILD_GITURL" &> /dev/null
+        # 获取命令的退出状态码
+        EXIT_CODE=$?
+        if [ $EXIT_CODE -eq 0 ]; then
+        echo "Git 连接成功，可以正常访问远程仓库。"
+        else
+        echo "Git 连接失败，请检查网络、SSH 密钥或仓库 URL。"
+        gh issue comment ${{ github.event.issue.number }} -b "链接 '${BUILD_GITURL}' 连接失败，请检查网络、SSH 密钥或仓库 URL。"
+        exit 1
+        fi
         git clone $BUILD_GITURL
         # 获取第一个子目录名
         FIRST_DIR=$(ls -d */ | head -n 1)
