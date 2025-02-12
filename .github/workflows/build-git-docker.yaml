@@ -61,6 +61,8 @@ jobs:
         fi
         
         cd /tmp
+        mkdir git
+        cd git
         # 尝试执行 git ls-remote 命令
         git ls-remote "$BUILD_GITURL" &> /dev/null
         # 获取命令的退出状态码
@@ -77,10 +79,10 @@ jobs:
         FIRST_DIR=$(ls -d */ | head -n 1)
         # 去除目录名末尾的斜杠
         FIRST_DIR=${FIRST_DIR%/}
-        echo "第一个子目录路径: /tmp/$FIRST_DIR"
+        echo "第一个子目录路径: /tmp/git/$FIRST_DIR"
         
         echo "image=${ORIGIN_IMAGE}" >> $GITHUB_OUTPUT
-        echo "path=/tmp/$FIRST_DIR" >> $GITHUB_OUTPUT
+        echo "path=/tmp/git/$FIRST_DIR" >> $GITHUB_OUTPUT
 
     - name: Check Image
       run: |
