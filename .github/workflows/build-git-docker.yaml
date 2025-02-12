@@ -166,6 +166,7 @@ jobs:
         echo "=============================================================================="
         df -hT
         echo "=============================================================================="
+        gh auth refresh
         gh issue comment ${{ github.event.issue.number }} -b "镜像 ${ORIGIN_IMAGE} 构建完成<br>请使用 $new_image 替代源镜像"
         gh issue edit ${{ github.event.issue.number }} --add-label "build image succeeded" -b "IMAGE BUILD"
         gh issue close ${{ github.event.issue.number }} --reason "completed"
