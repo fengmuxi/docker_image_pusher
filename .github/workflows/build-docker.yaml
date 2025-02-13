@@ -146,9 +146,7 @@ jobs:
         echo "=============================================================================="
         df -hT
         echo "=============================================================================="
-        gh issue comment ${{ github.event.issue.number }} -b "镜像 ${ORIGIN_IMAGE} 构建完成<br>请使用 $new_image 替代源镜像"
-        gh issue edit ${{ github.event.issue.number }} --add-label "build image succeeded" -b "IMAGE BUILD"
-        gh issue close ${{ github.event.issue.number }} --reason "completed"
+        echo "image=${new_image}" >> $GITHUB_OUTPUT
 
     - name: Fail Build
       if: failure()
@@ -157,3 +155,12 @@ jobs:
         gh issue comment ${{ github.event.issue.number }} -b "镜像 ${ORIGIN_IMAGE} 构建失败[详情请查看](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})<br>如有疑问请回复 /auto-cc 召唤帮助, 或者查看[构建成功案例](https://github.com/${{ github.repository }}/issues?q=is%3Aissue+is%3Aclosed+label%3A%22build+image+succeeded%22)"
         gh issue edit ${{ github.event.issue.number }} --add-label "build image failure" -b "IMAGE BUILD"
         gh issue close ${{ github.event.issue.number }} --reason "not planned"
+
+    - name: Success Build
+      if: success()
+      run: |
+        ORIGIN_IMAGE="${{ steps.get-image.outputs.image }}"
+        NEW_IMAGE="${{ steps.build-image.outputs.image }}"
+        gh issue comment ${{ github.event.issue.number }} -b "镜像 ${ORIGIN_IMAGE} 构建完成<br>请使用 $NEW_IMAGE 替代源镜像"
+        gh issue edit ${{ github.event.issue.number }} --add-label "build image succeeded" -b "IMAGE BUILD"
+        gh issue close ${{ github.event.issue.number }} --reason "completed"
