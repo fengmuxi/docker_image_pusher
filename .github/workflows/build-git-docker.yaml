@@ -77,7 +77,7 @@ jobs:
         gh issue comment ${{ github.event.issue.number }} -b "链接 '${BUILD_GITURL}' 连接失败，请检查网络、SSH 密钥或仓库 URL。"
         exit 1
         fi
-        if [[ "${BUILD_BRANCH}" == "" ]]; then
+        if [[ "${BUILD_BRANCH}" == "_No response_" ]]; then
         echo "git clone $BUILD_GITURL"
         git clone $BUILD_GITURL
         else
