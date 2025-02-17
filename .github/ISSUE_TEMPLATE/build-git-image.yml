@@ -19,6 +19,12 @@ body:
 
 - type: input
   attributes:
+    label: Git分支名称
+    placeholder: |
+      # 请提供Git分支名称不填写默认master
+
+- type: input
+  attributes:
     label: 构建镜像Git链接
     placeholder: |
       # 请提供构建镜像Git链接
