@@ -93,6 +93,7 @@ jobs:
       uses: docker/setup-buildx-action@v3
 
     - name: Build and push image Aliyun
+      id: build-image
       run: |
         ORIGIN_IMAGE="${{ steps.get-image.outputs.image }}"
         docker login -u $ALIYUN_REGISTRY_USER -p $ALIYUN_REGISTRY_PASSWORD $ALIYUN_REGISTRY
