@@ -101,7 +101,7 @@ jobs:
         else
         # 拼接路径
         echo "拼接路径"
-        FIRST_DIR="${{ FIRST_DIR }}${{ BUILD_DOCKER_PATH }}"
+        FIRST_DIR="${ FIRST_DIR }${ BUILD_DOCKER_PATH }"
         fi
         echo "目录路径: /tmp/git/$FIRST_DIR"
         
