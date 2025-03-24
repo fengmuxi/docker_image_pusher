@@ -27,6 +27,11 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
+
+    - name: Send Comment
+      run: |
+        gh issue comment ${{ github.event.issue.number }} -b "镜像仓库校验拉取中...<br>[详情请查看](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+
     - name: Check Issue
       id: get-image
       env:
@@ -40,6 +45,9 @@ jobs:
         # 提取Git分支名称
         BUILD_BRANCH=$(echo "$ISSUE_BODY" | awk -F '\n' '/Git分支名称/ {getline; getline; print $0}' | sed 's/^[[:space:]]*//')
         # echo "Git分支名称: $BUILD_BRANCH"
+        # 提取Dockerfile路径
+        BUILD_DOCKER_PATH=$(echo "$ISSUE_BODY" | awk -F '\n' '/Dockerfile路径/ {getline; getline; print $0}' | sed 's/^[[:space:]]*//')
+        echo "Dockerfile路径: $BUILD_DOCKER_PATH"
         # 提取构建镜像 GitUrl 内容
         BUILD_GITURL=$(echo "$ISSUE_BODY" | awk '/构建镜像Git链接/ {flag=1; next} flag {print}' | sed '1d' | sed 's/^[[:space:]]*//')
         echo "构建镜像 GitUrl 内容:"
@@ -86,9 +94,14 @@ jobs:
         fi
         # 获取第一个子目录名
         FIRST_DIR=$(ls -d */ | head -n 1)
+        if [[ "${BUILD_DOCKER_PATH}" == "_No response_" ]]; then
         # 去除目录名末尾的斜杠
         FIRST_DIR=${FIRST_DIR%/}
-        echo "第一个子目录路径: /tmp/git/$FIRST_DIR"
+        else
+        # 拼接路径
+        FIRST_DIR=$FIRST_DIR + $BUILD_DOCKER_PATH
+        fi
+        echo "目录路径: /tmp/git/$FIRST_DIR"
         
         echo "image=${ORIGIN_IMAGE}" >> $GITHUB_OUTPUT
         echo "path=/tmp/git/$FIRST_DIR" >> $GITHUB_OUTPUT

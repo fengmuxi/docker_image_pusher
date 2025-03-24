@@ -25,6 +25,12 @@ body:
 
 - type: input
   attributes:
+    label: Dockerfile路径
+    placeholder: |
+      # 请提供Dockerfile路径不填写默认根目录Dockerfile 示例：build/images
+
+- type: input
+  attributes:
     label: 构建镜像Git链接
     placeholder: |
       # 请提供构建镜像Git链接
