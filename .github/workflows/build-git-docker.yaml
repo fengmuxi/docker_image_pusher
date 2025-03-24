@@ -96,9 +96,11 @@ jobs:
         FIRST_DIR=$(ls -d */ | head -n 1)
         if [[ "${BUILD_DOCKER_PATH}" == "_No response_" ]]; then
         # 去除目录名末尾的斜杠
+        echo "去除目录名末尾的斜杠"
         FIRST_DIR=${FIRST_DIR%/}
         else
         # 拼接路径
+        echo "拼接路径"
         FIRST_DIR=$FIRST_DIR + $BUILD_DOCKER_PATH
         fi
         echo "目录路径: /tmp/git/$FIRST_DIR"
