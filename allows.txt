@@ -554,6 +554,7 @@ docker.io/testcontainers/*
 docker.io/texlive/texlive
 docker.io/thanosio/*
 docker.io/thingsboard/tb-postgres
+docker.io/thtom/rustdesk-server
 docker.io/thomassong/gpu-admission
 docker.io/tiangolo/*
 docker.io/timberio/*
