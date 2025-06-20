@@ -615,6 +615,7 @@ docker.io/moonrailgun/**
 docker.io/livekit/**
 docker.io/keking/**
 docker.osgeo.org/**
+docker.io/w12725/emby
 gcr.io/**
 ghcr.io/actions/**
 ghcr.io/advplyr/audiobookshelf
