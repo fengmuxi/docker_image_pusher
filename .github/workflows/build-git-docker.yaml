@@ -89,8 +89,8 @@ jobs:
         echo "git clone $BUILD_GITURL"
         git clone $BUILD_GITURL
         else
-        echo "git clone -b $BUILD_BRANCH $BUILD_GITURL"
-        git clone -b $BUILD_BRANCH $BUILD_GITURL
+        echo "git clone -b $BUILD_BRANCH $BUILD_GITURL --recursive"
+        git clone -b $BUILD_BRANCH $BUILD_GITURL --recursive
         fi
         # 获取第一个子目录名
         FIRST_DIR=$(ls -d */ | head -n 1)
