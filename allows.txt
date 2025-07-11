@@ -614,6 +614,7 @@ docker.io/coturn/**
 docker.io/moonrailgun/**
 docker.io/livekit/**
 docker.io/keking/**
+docker.io/koryking/iscsi-docker
 docker.osgeo.org/**
 docker.io/w12725/emby
 gcr.io/**
