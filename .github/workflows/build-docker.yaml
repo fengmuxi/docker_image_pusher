@@ -43,7 +43,7 @@ jobs:
         echo "构建镜像 DockerFile 内容:"
         echo "$BUILD_DOCKERFILE"
         
-        sudo chmod +x ./hack/verify.sh
+        # sudo chmod +x ./hack/verify.sh
         # PASSWORD="$(./hack/verify.sh "${BUILD_PASSWORD}")"
         if [[ "${PROJECT_SECRET_KEY}" != "${BUILD_PASSWORD}" ]]; then
           gh issue comment ${{ github.event.issue.number }} -b "构建镜像 '${ORIGIN_IMAGE}' 密码错误，请联系管理员"

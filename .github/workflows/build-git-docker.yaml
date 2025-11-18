@@ -15,6 +15,7 @@ env:
   ALIYUN_NAME_SPACE: "${{ secrets.ALIYUN_NAME_SPACE }}"
   ALIYUN_REGISTRY_USER: "${{ secrets.ALIYUN_REGISTRY_USER }}"
   ALIYUN_REGISTRY_PASSWORD: "${{ secrets.ALIYUN_REGISTRY_PASSWORD }}"
+  PROJECT_SECRET_KEY: "${{ secrets.PROJECT_SECRET_KEY }}"
 
 jobs:
 
@@ -53,22 +54,22 @@ jobs:
         echo "构建镜像 GitUrl 内容:"
         echo "$BUILD_GITURL"
         
-        sudo chmod +x ./hack/verify.sh
-        PASSWORD="$(./hack/verify.sh "${BUILD_PASSWORD}")"
-        if [[ "${PASSWORD}" == "" ]]; then
-        gh issue comment ${{ github.event.issue.number }} -b "构建镜像 '${ORIGIN_IMAGE}' 密码错误，请联系管理员"
-        exit 1
+        # sudo chmod +x ./hack/verify.sh
+        # PASSWORD="$(./hack/verify.sh "${BUILD_PASSWORD}")"
+        if [[ "${PROJECT_SECRET_KEY}" != "${BUILD_PASSWORD}" ]]; then
+          gh issue comment ${{ github.event.issue.number }} -b "构建镜像 '${ORIGIN_IMAGE}' 密码错误，请联系管理员"
+          exit 1
         else
-        NEW_ISSUE_BODY=$(echo "${{ github.event.issue.body }}" | awk -v password="${BUILD_PASSWORD}" '{gsub(password, "******"); print}')
-        echo "新的issue内容: $NEW_ISSUE_BODY"
-        gh issue edit ${{ github.event.issue.number }} --body "${NEW_ISSUE_BODY}"
+          NEW_ISSUE_BODY=$(echo "${{ github.event.issue.body }}" | awk -v password="${BUILD_PASSWORD}" '{gsub(password, "******"); print}')
+          echo "新的issue内容: $NEW_ISSUE_BODY"
+          gh issue edit ${{ github.event.issue.number }} --body "${NEW_ISSUE_BODY}"
         fi
         
         sudo chmod +x ./hack/supply-image.sh
         CORRECT_IMAGE="$(./hack/supply-image.sh "${ORIGIN_IMAGE}")"
         if [[ "${CORRECT_IMAGE}" == "" ]]; then
-        gh issue comment ${{ github.event.issue.number }} -b "镜像 '${ORIGIN_IMAGE}' 名称不符合规范"
-        exit 1
+          gh issue comment ${{ github.event.issue.number }} -b "镜像 '${ORIGIN_IMAGE}' 名称不符合规范"
+          exit 1
         fi
         
         cd /tmp
@@ -79,30 +80,30 @@ jobs:
         # 获取命令的退出状态码
         EXIT_CODE=$?
         if [ $EXIT_CODE -eq 0 ]; then
-        echo "Git 连接成功，可以正常访问远程仓库。"
+          echo "Git 连接成功，可以正常访问远程仓库。"
         else
-        echo "Git 连接失败，请检查网络、SSH 密钥或仓库 URL。"
-        gh issue comment ${{ github.event.issue.number }} -b "链接 '${BUILD_GITURL}' 连接失败，请检查网络、SSH 密钥或仓库 URL。"
-        exit 1
+          echo "Git 连接失败，请检查网络、SSH 密钥或仓库 URL。"
+          gh issue comment ${{ github.event.issue.number }} -b "链接 '${BUILD_GITURL}' 连接失败，请检查网络、SSH 密钥或仓库 URL。"
+          exit 1
         fi
         if [[ "${BUILD_BRANCH}" == "_No response_" ]]; then
-        echo "git clone $BUILD_GITURL"
-        git clone $BUILD_GITURL
+          echo "git clone $BUILD_GITURL"
+          git clone $BUILD_GITURL --recursive
         else
-        echo "git clone -b $BUILD_BRANCH $BUILD_GITURL --recursive"
-        git clone -b $BUILD_BRANCH $BUILD_GITURL --recursive
+          echo "git clone -b $BUILD_BRANCH $BUILD_GITURL --recursive"
+          git clone -b $BUILD_BRANCH $BUILD_GITURL --recursive
         fi
         # 获取第一个子目录名
         FIRST_DIR=$(ls -d */ | head -n 1)
         if [[ "${BUILD_DOCKER_PATH}" == "_No response_" ]]; then
-        # 去除目录名末尾的斜杠
-        echo "去除目录名末尾的斜杠"
-        FIRST_DIR=${FIRST_DIR%/}
+          # 去除目录名末尾的斜杠
+          echo "去除目录名末尾的斜杠"
+          FIRST_DIR=${FIRST_DIR%/}
         else
-        # 拼接路径
-        echo "拼接路径"
-        FIRST_DIR=${FIRST_DIR%/}
-        FIRST_DIR="$FIRST_DIR/$BUILD_DOCKER_PATH"
+          # 拼接路径
+          echo "拼接路径"
+          FIRST_DIR=${FIRST_DIR%/}
+          FIRST_DIR="$FIRST_DIR/$BUILD_DOCKER_PATH"
         fi
         echo "目录路径: /tmp/git/$FIRST_DIR"
         
