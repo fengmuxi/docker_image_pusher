@@ -9,6 +9,12 @@ body:
       # ↑↑↑↑↑↑↑↑↑↑↑ 填入你要同步的 Image
       ## 请包含 域名/路径:标签
 
+- type: input
+  attributes:
+    label: 同步镜像密码
+    placeholder: |
+      # 输入后可无视白名单同步镜像
+
 - type: checkboxes
   attributes:
     label: 镜像域名 (镜像仓库)

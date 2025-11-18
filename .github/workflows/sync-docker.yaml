@@ -15,6 +15,7 @@ env:
   ALIYUN_NAME_SPACE: "${{ secrets.ALIYUN_NAME_SPACE }}"
   ALIYUN_REGISTRY_USER: "${{ secrets.ALIYUN_REGISTRY_USER }}"
   ALIYUN_REGISTRY_PASSWORD: "${{ secrets.ALIYUN_REGISTRY_PASSWORD }}"
+  PROJECT_SECRET_KEY: "${{ secrets.PROJECT_SECRET_KEY }}"
 
 jobs:
 
@@ -33,24 +34,34 @@ jobs:
         IMAGE: "${{ github.event.issue.title }}"
       run: |
         ORIGIN_IMAGE="${IMAGE}"
+        ISSUE_BODY="${{ github.event.issue.body }}"
+        # 提取构建镜像密码
+        BUILD_PASSWORD=$(echo "$ISSUE_BODY" | awk -F '\n' '/同步镜像密码/ {getline; getline; print $0}' | sed 's/^[[:space:]]*//')
+        # echo "构建镜像密码: $BUILD_PASSWORD"
+        
         sudo chmod +x ./hack/correct-image.sh
         sudo chmod +x ./hack/verify-allows.sh
         CORRECT_IMAGE="$(./hack/correct-image.sh "${ORIGIN_IMAGE}")"
         if [[ "${CORRECT_IMAGE}" == "" ]]; then
-        gh issue comment ${{ github.event.issue.number }} -b "镜像 '${ORIGIN_IMAGE}' 不是一个镜像"
-        exit 1
+          gh issue comment ${{ github.event.issue.number }} -b "镜像 '${ORIGIN_IMAGE}' 不是一个镜像"
+          exit 1
         fi
         if [[ "${CORRECT_IMAGE}" != "${ORIGIN_IMAGE}" ]]; then
-        if ! ./hack/verify-allows.sh ./allows.txt "${CORRECT_IMAGE}"; then
-          gh issue comment ${{ github.event.issue.number }} -b "镜像 '${ORIGIN_IMAGE}' 不存在呢, 也许应该是 '${CORRECT_IMAGE}', 并且不在白名单列表里, 不支持同步和访问<br>可以将其添加到[白名单](https://github.com/${{ github.repository }}/issues/2328)"
+          if ! ./hack/verify-allows.sh ./allows.txt "${CORRECT_IMAGE}"; then
+            gh issue comment ${{ github.event.issue.number }} -b "镜像 '${ORIGIN_IMAGE}' 不存在呢, 也许应该是 '${CORRECT_IMAGE}', 并且不在白名单列表里, 不支持同步和访问<br>可以将其添加到[白名单](https://github.com/${{ github.repository }}/issues/2328)"
+          else
+            gh issue comment ${{ github.event.issue.number }} -b "镜像 '${ORIGIN_IMAGE}' 不存在呢, 也许应该是 '${CORRECT_IMAGE}'"
+          fi
+          exit 1
+        fi
+        if [[ "${BUILD_PASSWORD}" != "" ]] && [[ "${PROJECT_SECRET_KEY}" != "" ]] && [[ "${PROJECT_SECRET_KEY}" != "${BUILD_PASSWORD}" ]]; then
+          gh issue comment ${{ github.event.issue.number }} -b "同步镜像 '${ORIGIN_IMAGE}' 密码错误，请联系管理员"
+          exit 1
         else
-          gh issue comment ${{ github.event.issue.number }} -b "镜像 '${ORIGIN_IMAGE}' 不存在呢, 也许应该是 '${CORRECT_IMAGE}'"
-        fi
-        exit 1
-        fi
-        if ! ./hack/verify-allows.sh ./allows.txt "${ORIGIN_IMAGE}"; then
-        gh issue comment ${{ github.event.issue.number }} -b "镜像 ${ORIGIN_IMAGE} 不在白名单列表里, 不支持同步和访问<br>可以将其添加到[白名单](https://github.com/${{ github.repository }}/issues/2328)"
-        exit 1
+          if ! ./hack/verify-allows.sh ./allows.txt "${ORIGIN_IMAGE}"; then
+            gh issue comment ${{ github.event.issue.number }} -b "镜像 ${ORIGIN_IMAGE} 不在白名单列表里, 不支持同步和访问<br>可以将其添加到[白名单](https://github.com/${{ github.repository }}/issues/2328)"
+            exit 1
+          fi
         fi
         echo "image=${ORIGIN_IMAGE}" >> $GITHUB_OUTPUT
 
