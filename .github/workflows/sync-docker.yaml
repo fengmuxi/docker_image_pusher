@@ -55,13 +55,12 @@ jobs:
           exit 1
         fi
         if [[ "${BUILD_PASSWORD}" != "" ]] && [[ "${PROJECT_SECRET_KEY}" != "" ]] && [[ "${PROJECT_SECRET_KEY}" != "${BUILD_PASSWORD}" ]]; then
-          gh issue comment ${{ github.event.issue.number }} -b "同步镜像 '${ORIGIN_IMAGE}' 密码错误，请联系管理员"
-          exit 1
-        else
+          gh issue comment ${{ github.event.issue.number }} -b "同步镜像 '${ORIGIN_IMAGE}' 密码错误，切换到白名单模式"
           if ! ./hack/verify-allows.sh ./allows.txt "${ORIGIN_IMAGE}"; then
             gh issue comment ${{ github.event.issue.number }} -b "镜像 ${ORIGIN_IMAGE} 不在白名单列表里, 不支持同步和访问<br>可以将其添加到[白名单](https://github.com/${{ github.repository }}/issues/2328)"
             exit 1
           fi
+        else
           NEW_ISSUE_BODY=$(echo "${{ github.event.issue.body }}" | awk -v password="${BUILD_PASSWORD}" '{gsub(password, "******"); print}')
           echo "新的issue内容: $NEW_ISSUE_BODY"
           gh issue edit ${{ github.event.issue.number }} --body "${NEW_ISSUE_BODY}"
