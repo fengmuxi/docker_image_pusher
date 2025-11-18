@@ -62,6 +62,9 @@ jobs:
             gh issue comment ${{ github.event.issue.number }} -b "镜像 ${ORIGIN_IMAGE} 不在白名单列表里, 不支持同步和访问<br>可以将其添加到[白名单](https://github.com/${{ github.repository }}/issues/2328)"
             exit 1
           fi
+          NEW_ISSUE_BODY=$(echo "${{ github.event.issue.body }}" | awk -v password="${BUILD_PASSWORD}" '{gsub(password, "******"); print}')
+          echo "新的issue内容: $NEW_ISSUE_BODY"
+          gh issue edit ${{ github.event.issue.number }} --body "${NEW_ISSUE_BODY}"
         fi
         echo "image=${ORIGIN_IMAGE}" >> $GITHUB_OUTPUT
 
