@@ -35,7 +35,9 @@ Fork本项目<br>
 进入Settings->Secret and variables->Actions->New Repository secret
 ![](doc/配置环境变量.png)
 将上一步的**四个值**<br>
-ALIYUN_NAME_SPACE,ALIYUN_REGISTRY_USER，ALIYUN_REGISTRY_PASSWORD，ALIYUN_REGISTRY<br>
+ALIYUN_NAME_SPACE,ALIYUN_REGISTRY_USER,ALIYUN_REGISTRY_PASSWORD,ALIYUN_REGISTRY<br>
+另外配置上项目密码用于验证同步请求<br>
+PROJECT_SECRET_KEY<br>
 配置成环境变量
 
 ### 添加镜像
