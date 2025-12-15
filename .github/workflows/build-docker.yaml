@@ -188,7 +188,32 @@ jobs:
       if: success()
       run: |
         ORIGIN_IMAGE="${{ steps.get-image.outputs.image }}"
-        NEW_IMAGE="${{ steps.build-image.outputs.image }}"
-        gh issue comment ${{ github.event.issue.number }} -b "镜像 ${ORIGIN_IMAGE} 构建完成<br>请使用 $NEW_IMAGE 替代源镜像"
+        
+        # 生成所有构建的镜像地址列表
+        if echo "$ORIGIN_IMAGE" | grep -q ','; then
+            # 多版本格式: image_name:v1.0.0,v1.1.0,v2.0.0
+            base_image=$(echo "$ORIGIN_IMAGE" | awk -F':' '{print $1}')
+            versions=$(echo "$ORIGIN_IMAGE" | awk -F':' '{print $2}')
+            # 分割版本字符串
+            IFS=',' read -ra version_array <<< "$versions"
+        else
+            # 单版本格式: image_name:v1.0.0 或 image_name
+            if echo "$ORIGIN_IMAGE" | grep -q ':'; then
+                base_image=$(echo "$ORIGIN_IMAGE" | awk -F':' '{print $1}')
+                version_array=($(echo "$ORIGIN_IMAGE" | awk -F':' '{print $2}'))
+            else
+                base_image="$ORIGIN_IMAGE"
+                version_array=("latest")
+            fi
+        fi
+        
+        # 构建镜像地址列表
+        IMAGE_LIST=""
+        for version in "${version_array[@]}"; do
+            image_url="registry.cn-hangzhou.aliyuncs.com/fengmuxi-docker-images/${base_image}:${version}"
+            IMAGE_LIST="${IMAGE_LIST}<br>• ${image_url}"
+        done
+        
+        gh issue comment ${{ github.event.issue.number }} -b "镜像 ${ORIGIN_IMAGE} 构建完成<br><br>请使用以下镜像替代源镜像:${IMAGE_LIST}"
         gh issue edit ${{ github.event.issue.number }} --add-label "build image succeeded" -b "IMAGE BUILD"
         gh issue close ${{ github.event.issue.number }} --reason "completed"
