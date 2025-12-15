@@ -209,11 +209,11 @@ jobs:
         df -hT
         echo "=============================================================================="
         
-        # 清理本地镜像
-        docker rmi ${base_image}:latest
+        # 清理本地镜像 - 使用强制删除并忽略不存在的镜像
+        docker rmi -f ${base_image}:latest 2>/dev/null || true
         for version in "${version_array[@]}"; do
-            docker rmi ${base_image}:${version}
-            docker rmi "$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/${base_image}:${version}"
+            docker rmi -f ${base_image}:${version} 2>/dev/null || true
+            docker rmi -f "$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/${base_image}:${version}" 2>/dev/null || true
         done
         rm -rf $DOCKER_PATH
         
