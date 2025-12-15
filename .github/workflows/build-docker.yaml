@@ -109,46 +109,72 @@ jobs:
       run: |
         ORIGIN_IMAGE="${{ steps.get-image.outputs.image }}"
         docker login -u $ALIYUN_REGISTRY_USER -p $ALIYUN_REGISTRY_PASSWORD $ALIYUN_REGISTRY
-        # 数据预处理,判断镜像是否重名
-        declare -A duplicate_images
-        declare -A temp_map
         
-        # 获取镜像名:版本号  例如nginx:1.25.3
-        image_name_tag=${ORIGIN_IMAGE}
-        echo "image_name_tag $image_name_tag"
-        # 获取镜像名例如nginx
-        image_name=$(echo "$image_name_tag" | awk -F':' '{print $1}')
-        echo "image_name: $image_name"
-        
-        # 如果镜像存在于数组中，则添加temp_map
-        if [[ -n "${temp_map[$image_name]}" ]]; then
-            echo "duplicate image name: $image_name"
-            duplicate_images[$image_name]="true"
+        # 获取镜像名和版本字符串
+        # 检查是否包含逗号分割的版本
+        if echo "$ORIGIN_IMAGE" | grep -q ','; then
+            # 格式: image_name:v1.0.0,v1.1.0,v2.0.0
+            base_image=$(echo "$ORIGIN_IMAGE" | awk -F':' '{print $1}')
+            versions=$(echo "$ORIGIN_IMAGE" | awk -F':' '{print $2}')
+            echo "base_image: $base_image"
+            echo "versions: $versions"
+            
+            # 分割版本字符串
+            IFS=',' read -ra version_array <<< "$versions"
         else
-            # 存镜像的命名空间
-            temp_map[$image_name]="fengmuxi"
-        fi       
+            # 单版本格式: image_name:v1.0.0 或 image_name
+            if echo "$ORIGIN_IMAGE" | grep -q ':'; then
+                base_image=$(echo "$ORIGIN_IMAGE" | awk -F':' '{print $1}')
+                version_array=($(echo "$ORIGIN_IMAGE" | awk -F':' '{print $2}'))
+            else
+                base_image="$ORIGIN_IMAGE"
+                version_array=("latest")
+            fi
+        fi
         
+        # 构建基础镜像
+        echo "docker build -t ${base_image}:latest -f /tmp/Dockerfile ."
+        docker build -t ${base_image}:latest -f /tmp/Dockerfile .
         
-        echo "docker build -t ${ORIGIN_IMAGE} -f /tmp/Dockerfile ."
-        docker build -t ${ORIGIN_IMAGE} -f /tmp/Dockerfile .
-        # 将@sha256:等字符删除
-        new_image="$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/${image_name_tag}"
-        echo "docker tag $ORIGIN_IMAGE $new_image"
-        docker tag $ORIGIN_IMAGE $new_image
-        echo "docker push $new_image"
-        docker push $new_image
+        # 为每个版本构建、标记并推送
+        for version in "${version_array[@]}"; do
+            echo "处理版本: $version"
+            
+            # 构建特定版本镜像
+            image_name_tag="${base_image}:${version}"
+            echo "docker tag ${base_image}:latest $image_name_tag"
+            docker tag ${base_image}:latest $image_name_tag
+            
+            # 标记并推送到阿里云
+            new_image="$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/${image_name_tag}"
+            echo "docker tag $image_name_tag $new_image"
+            docker tag $image_name_tag $new_image
+            echo "docker push $new_image"
+            docker push $new_image
+            
+            # 记录第一个推送的镜像用于输出
+            if [[ -z "$FIRST_IMAGE" ]]; then
+                FIRST_IMAGE="$new_image"
+            fi
+        done
+        
         echo "开始清理磁盘空间"
         echo "=============================================================================="
         df -hT
         echo "=============================================================================="
-        docker rmi $ORIGIN_IMAGE
-        docker rmi $new_image
+        
+        # 清理本地镜像
+        docker rmi ${base_image}:latest
+        for version in "${version_array[@]}"; do
+            docker rmi ${base_image}:${version}
+            docker rmi "$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/${base_image}:${version}"
+        done
+        
         echo "磁盘空间清理完毕"
         echo "=============================================================================="
         df -hT
         echo "=============================================================================="
-        echo "image=${new_image}" >> $GITHUB_OUTPUT
+        echo "image=${FIRST_IMAGE}" >> $GITHUB_OUTPUT
 
     - name: Fail Build
       if: failure()
