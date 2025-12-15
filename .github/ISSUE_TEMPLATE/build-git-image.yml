@@ -14,8 +14,6 @@ body:
     label: 构建镜像密码
     placeholder: |
       # 请提供构建镜像的密码
-  validations:
-    required: true
 
 - type: input
   attributes:
