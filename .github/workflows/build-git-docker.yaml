@@ -46,6 +46,9 @@ jobs:
         # 提取Git分支名称
         BUILD_BRANCH=$(echo "$ISSUE_BODY" | awk -F '\n' '/Git分支名称/ {getline; getline; print $0}' | sed 's/^[[:space:]]*//')
         # echo "Git分支名称: $BUILD_BRANCH"
+        # 提取Git标签名称
+        BUILD_TAG=$(echo "$ISSUE_BODY" | awk -F '\n' '/Git标签名称/ {getline; getline; print $0}' | sed 's/^[[:space:]]*//')
+        echo "Git标签名称: $BUILD_TAG"
         # 提取Dockerfile路径
         BUILD_DOCKER_PATH=$(echo "$ISSUE_BODY" | awk -F '\n' '/Dockerfile路径/ {getline; getline; print $0}' | sed 's/^[[:space:]]*//')
         echo "Dockerfile路径: $BUILD_DOCKER_PATH"
@@ -86,12 +89,18 @@ jobs:
           gh issue comment ${{ github.event.issue.number }} -b "链接 '${BUILD_GITURL}' 连接失败，请检查网络、SSH 密钥或仓库 URL。"
           exit 1
         fi
-        if [[ "${BUILD_BRANCH}" == "_No response_" ]]; then
-          echo "git clone $BUILD_GITURL"
-          git clone $BUILD_GITURL --recursive
-        else
+        if [[ "${BUILD_TAG}" != "_No response_" ]] && [[ -n "${BUILD_TAG}" ]]; then
+          # 优先使用标签进行构建
+          echo "git clone --branch ${BUILD_TAG} $BUILD_GITURL --recursive"
+          git clone --branch "${BUILD_TAG}" $BUILD_GITURL --recursive
+        elif [[ "${BUILD_BRANCH}" != "_No response_" ]] && [[ -n "${BUILD_BRANCH}" ]]; then
+          # 使用分支进行构建
           echo "git clone -b $BUILD_BRANCH $BUILD_GITURL --recursive"
           git clone -b $BUILD_BRANCH $BUILD_GITURL --recursive
+        else
+          # 默认克隆（master/main）
+          echo "git clone $BUILD_GITURL"
+          git clone $BUILD_GITURL --recursive
         fi
         # 获取第一个子目录名
         FIRST_DIR=$(ls -d */ | head -n 1)

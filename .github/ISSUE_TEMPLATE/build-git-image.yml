@@ -23,6 +23,12 @@ body:
 
 - type: input
   attributes:
+    label: Git标签名称
+    placeholder: |
+      # 请提供Git标签名称（可选，优先级高于分支）
+
+- type: input
+  attributes:
     label: Dockerfile路径
     placeholder: |
       # 请提供Dockerfile路径不填写默认根目录Dockerfile 示例：build/images
